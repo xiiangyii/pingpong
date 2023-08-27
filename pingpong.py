@@ -1,18 +1,20 @@
 from pygame import*
 
-bg = (255, 255, 255)
-width = 500
-height = 300
+imgbg = 'bg.jpg'
+width = 800
+height = 500
 win = display.set_mode((width, height))
-win.fill(bg)
-
-clock = time.Clock()
-FPS = 60
-game = True
+#win.fill((255, 255, 255))
+bg = transform.scale(image.load(imgbg), (width, height))
 
 ballsprite = 'ball.png'
 paddlesprite1 = 'thunder.png'
 paddlesprite2 = 'thunder.png'
+
+font.init()
+font = font.SysFont('Arial', 80)
+win1 = font.render('Hey the one on the left, you won', True, (255, 255, 255))
+win2 = font.render('Hey the one on the right, you won', True, (255, 255, 255))
 
 class GameSprite(sprite.Sprite):
 
@@ -29,7 +31,7 @@ class GameSprite(sprite.Sprite):
 class Player(GameSprite):
 
     def updateL(self):
-        keys = keys.get_pressed()
+        keys = key.get_pressed()
         if keys[K_u] and self.rect.y > 5:
             self.rect.y -= self.speed
 
@@ -37,31 +39,62 @@ class Player(GameSprite):
             self.rect.y += self.speed
 
     def updateR(self):
-        keys = keys.pressed()
-        if keys[K_UP] and self.rect.y > 5:
+        keys = key.get_pressed()
+        if keys[K_UP] and self.rect.y > 10:
             self.rect.y -= self.speed
 
-        if keys[K_DOWN] and self.rect.y < 5:
+        if keys[K_DOWN] and self.rect.y < height - 100:
             self.rect.y += self.speed
 
 
-paddle1 = Player(paddlesprite1, 70, 100, 50, 100, 10)
-paddle2 = Player(paddlesprite2, 430, 100, 50, 100, 10)
+paddle1 = Player(paddlesprite1, 70, 200, 50, 100, 10)
+paddle2 = Player(paddlesprite2, 700, 200, 50, 100, 10)
+ball = GameSprite(ballsprite, 400, 250, 80, 70, 15)
+
+
+clock = time.Clock()
+FPS = 60
+game = True
+finish = False
 
 speed_x = 3
 speed_y = 3
 
-while game():
+while game:
     for e in event.get():
         if e.type == QUIT:
             game = False
 
-        if finish != True:
-            win.fill(bg)
+        if game != True:
+            win.fill((255, 255, 255))
+            win.blit(bg, (0, 0))
             paddle1.updateL()
             paddle2.updateR()
+
+            ball.update()
             ball.rect.x += speed_x
             ball.rect.y += speed_y
 
-    display.update()
-    clock.tick(FPS)
+            if sprite.collide_rect(paddle1, ball) or sprite.collide_rect(paddle2, ball):
+                speed_x *= -1
+                speed_y *= -1
+
+            if ball.rect.y > height - 50 or ball.rect.y < 0:
+                speed_y *= -1
+
+            if ball.rect.x < 0:
+                win.blit(win2, (350, 200))
+                finish = True
+
+            if ball.rect.x > width:
+                win.blit(win1, (350, 200))
+                finish = True
+
+            paddle1.updateL()
+            paddle2.updateR()
+            paddle1.reset()
+            paddle2.reset()
+            ball.reset()
+            
+            display.update()
+            clock.tick(FPS)
